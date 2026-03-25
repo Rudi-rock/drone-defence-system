@@ -1,32 +1,17 @@
-# GitHub Pages Configuration
+# GitHub Pages Configuration (Minimal)
 
-# Site settings
+# Simple configuration - we're using pure HTML, not Jekyll themes
 title: Autonomous Drone Swarm Security System
 description: A production-ready system for autonomous drone swarm coordination with bio-inspired intelligence
-url: https://Rudi-rock.github.io/drone-defence-system
-baseurl: /drone-defence-system
 
-# Build settings
-markdown: kramdown
-theme: jekyll-theme-minimal
+# Disable Jekyll processing
+future: false
 
-# Exclude files from Jekyll processing
+# Exclude unnecessary files
 exclude:
   - .git
   - .gitignore
   - README.md
-  - .github
   - __pycache__
   - venv
   - node_modules
-  - .pytest_cache
-  - *.pyc
-  - __pycache__/
-
-# Include files for Jekyll processing
-include:
-  - index.html
-
-# Minimal theme customization (optional)
-show_downloads: false
-google_analytics: false
