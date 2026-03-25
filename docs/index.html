@@ -1272,16 +1272,15 @@ chmod +x start.sh
 
             loadBackgroundImage() {
                 const img = new Image();
-                img.crossOrigin = "anonymous";
                 img.onload = () => {
                     this.backgroundImage = img;
                     this.imageLoaded = true;
                 };
                 img.onerror = () => {
-                    console.log('Background image failed to load, using default gradient');
+                    console.log('Background image failed to load, using fallback');
                     this.imageLoaded = false;
                 };
-                img.src = 'https://mondediplo.com/local/cache-vignettes/L640xH482/arton2026-cbd6f-de10b.jpg?1583768946';
+                img.src = './map-background.jpg';
             }
 
             init(droneCount) {
