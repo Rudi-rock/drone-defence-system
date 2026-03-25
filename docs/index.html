@@ -724,18 +724,18 @@
     <div id="simulationModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>🚁 Live Drone Swarm Simulation</h2>
+                <h2>⚔️ Drone Defence System - Attack Formation</h2>
                 <button class="modal-close" id="simulationClose">&times;</button>
             </div>
             
             <div class="sim-controls">
-                <label>Drones:</label>
-                <input type="number" id="droneCount" min="5" max="100" value="30" style="width: 80px;">
+                <label>Attack Drones:</label>
+                <input type="number" id="droneCount" min="5" max="100" value="40" style="width: 80px;">
                 
-                <label>Speed:</label>
+                <label>Formation Speed:</label>
                 <input type="range" id="speedControl" min="0.5" max="3" step="0.5" value="1.5" style="width: 100px;">
                 
-                <button id="startBtn">Start</button>
+                <button id="startBtn">Launch Attack</button>
                 <button id="pauseBtn" disabled>Pause</button>
                 <button id="resetBtn">Reset</button>
             </div>
@@ -744,8 +744,8 @@
 
             <div class="sim-stats">
                 <div class="stat-item">
-                    <div class="stat-value" id="droneStat">30</div>
-                    <div class="stat-name">Drones</div>
+                    <div class="stat-value" id="droneStat">40</div>
+                    <div class="stat-name">Active Drones</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="fpsValue">60</div>
@@ -753,11 +753,11 @@
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="timeValue">0s</div>
-                    <div class="stat-name">Time</div>
+                    <div class="stat-name">Mission Time</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="avgDistValue">0m</div>
-                    <div class="stat-name">Avg Distance</div>
+                    <div class="stat-value" id="avgDistValue">0</div>
+                    <div class="stat-name">Destruction Areas</div>
                 </div>
             </div>
         </div>
@@ -1121,19 +1121,21 @@ chmod +x start.sh
                 this.vy = (Math.random() - 0.5) * 4;
                 this.canvasWidth = canvasWidth;
                 this.canvasHeight = canvasHeight;
-                this.maxSpeed = 5;
+                this.maxSpeed = 6;
                 this.separationRadius = 40;
-                this.alignmentRadius = 80;
-                this.cohesionRadius = 80;
+                this.alignmentRadius = 120;
+                this.cohesionRadius = 120;
                 this.crashed = false;
                 this.crashX = 0;
                 this.crashY = 0;
-                this.coverageRadius = 50;
+                this.deploymentRadius = 80; // Initial destruction radius
+                this.destructionRadius = 120; // Max destruction radius
+                this.formationRadius = 60; // Formation flying distance
             }
 
             checkPakistan() {
-                // Pakistan region is roughly the left 30% of the map
-                if (this.x < this.canvasWidth * 0.3) {
+                // Pakistan region is roughly the left 35% of the map
+                if (this.x < this.canvasWidth * 0.35) {
                     this.crashed = true;
                     this.crashX = this.x;
                     this.crashY = this.y;
@@ -1142,7 +1144,40 @@ chmod +x start.sh
                 }
             }
 
-            // Separation: steer to avoid crowding local flockmates
+            // Formation flying - stay in military formation
+            formationFly(boids, speedMultiplier) {
+                let closestBoid = null;
+                let closestDist = Infinity;
+
+                // Find nearest non-crashed drone to follow
+                for (let boid of boids) {
+                    if (boid.crashed || boid === this) continue;
+                    let dx = this.x - boid.x;
+                    let dy = this.y - boid.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < closestDist) {
+                        closestDist = distance;
+                        closestBoid = boid;
+                    }
+                }
+
+                // If we have formations, maintain formation
+                if (closestBoid && closestDist > 0 && closestDist < 150) {
+                    let dx = closestBoid.x - this.x;
+                    let dy = closestBoid.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Steer toward formation leader
+                    this.vx += (dx / dist) * 0.08;
+                    this.vy += (dy / dist) * 0.08;
+                }
+
+                // Strong direction toward Pakistan (left side)
+                this.vx -= 0.15 * speedMultiplier;
+            }
+
+            // Separation: steer to avoid crowding
             separate(boids) {
                 let steerX = 0, steerY = 0;
                 let count = 0;
@@ -1154,8 +1189,8 @@ chmod +x start.sh
                     let distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (distance > 0 && distance < this.separationRadius) {
-                        steerX += (dx / distance) * 0.5;
-                        steerY += (dy / distance) * 0.5;
+                        steerX += (dx / distance) * 0.6;
+                        steerY += (dy / distance) * 0.6;
                         count++;
                     }
                 }
@@ -1167,7 +1202,7 @@ chmod +x start.sh
                 return { x: steerX, y: steerY };
             }
 
-            // Alignment: steer towards the average heading of local flockmates
+            // Alignment: maintain group heading
             align(boids) {
                 let avgVx = 0, avgVy = 0;
                 let count = 0;
@@ -1191,10 +1226,10 @@ chmod +x start.sh
                     avgVx -= this.vx;
                     avgVy -= this.vy;
                 }
-                return { x: avgVx * 0.1, y: avgVy * 0.1 };
+                return { x: avgVx * 0.12, y: avgVy * 0.12 };
             }
 
-            // Cohesion: steer to move toward the average location of local flockmates
+            // Cohesion: stay together
             cohere(boids) {
                 let avgX = 0, avgY = 0;
                 let count = 0;
@@ -1217,12 +1252,12 @@ chmod +x start.sh
                     avgY /= count;
                     let steerX = avgX - this.x;
                     let steerY = avgY - this.y;
-                    return { x: steerX * 0.1, y: steerY * 0.1 };
+                    return { x: steerX * 0.08, y: steerY * 0.08 };
                 }
                 return { x: 0, y: 0 };
             }
 
-            // Update position based on boids rules
+            // Update position with military formation flying
             update(boids, speedMultiplier) {
                 if (this.crashed) return;
 
@@ -1231,7 +1266,7 @@ chmod +x start.sh
                 let cohesion = this.cohere(boids);
 
                 this.vx += separation.x + alignment.x + cohesion.x;
-                this.vy += separation.y + alignment.y + cohesion.y;
+                this.formationFly(boids, speedMultiplier);
 
                 // Limit speed
                 let speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
@@ -1244,7 +1279,7 @@ chmod +x start.sh
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Wrap around edges (allow movement to Pakistan)
+                // Wrap around edges
                 if (this.x > this.canvasWidth) this.x = 0;
                 if (this.x < 0) this.x = this.canvasWidth;
                 if (this.y > this.canvasHeight) this.y = 0;
@@ -1254,7 +1289,7 @@ chmod +x start.sh
                 this.checkPakistan();
             }
 
-            // Draw the boid
+            // Draw the drone
             draw(ctx, color = '#ff6b6b') {
                 if (!this.crashed) {
                     ctx.save();
@@ -1263,30 +1298,53 @@ chmod +x start.sh
                     let angle = Math.atan2(this.vy, this.vx);
                     ctx.rotate(angle);
 
+                    // Drone body
                     ctx.fillStyle = color;
                     ctx.beginPath();
-                    ctx.moveTo(8, 0);
-                    ctx.lineTo(-4, -4);
+                    ctx.moveTo(10, 0);
+                    ctx.lineTo(-5, -5);
                     ctx.lineTo(-2, 0);
-                    ctx.lineTo(-4, 4);
+                    ctx.lineTo(-5, 5);
                     ctx.closePath();
+                    ctx.fill();
+
+                    // Drone indicator
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 3, 0, Math.PI * 2);
                     ctx.fill();
 
                     ctx.restore();
                 }
             }
 
-            drawCoverage(ctx) {
+            // Draw destruction area when crashed
+            drawDestruction(ctx) {
                 if (this.crashed) {
-                    ctx.fillStyle = 'rgba(255, 107, 107, 0.3)';
+                    // Large destruction radius (red transparent circle)
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.25)';
                     ctx.beginPath();
-                    ctx.arc(this.crashX, this.crashY, this.coverageRadius, 0, Math.PI * 2);
+                    ctx.arc(this.crashX, this.crashY, this.destructionRadius, 0, Math.PI * 2);
                     ctx.fill();
 
+                    // Medium destruction ring
+                    ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(this.crashX, this.crashY, this.deploymentRadius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Explosion center
                     ctx.fillStyle = '#ff0000';
                     ctx.beginPath();
-                    ctx.arc(this.crashX, this.crashY, 4, 0, Math.PI * 2);
+                    ctx.arc(this.crashX, this.crashY, 6, 0, Math.PI * 2);
                     ctx.fill();
+
+                    // Damage indicator ring
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(this.crashX, this.crashY, this.destructionRadius - 10, 0, Math.PI * 2);
+                    ctx.stroke();
                 }
             }
         }
@@ -1380,12 +1438,12 @@ chmod +x start.sh
 
                 // Draw boids
                 for (let boid of this.boids) {
-                    boid.draw(this.ctx, '#ff6b6b');
+                    boid.draw(this.ctx, '#ff1744');
                 }
 
-                // Draw coverage areas for crashed drones
+                // Draw destruction areas for crashed drones
                 for (let boid of this.boids) {
-                    boid.drawCoverage(this.ctx);
+                    boid.drawDestruction(this.ctx);
                 }
 
                 // Draw swarm center
@@ -1403,7 +1461,7 @@ chmod +x start.sh
 
                     this.ctx.fillStyle = '#ff4757';
                     this.ctx.beginPath();
-                    this.ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+                    this.ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
                     this.ctx.fill();
                 }
             }
@@ -1446,12 +1504,11 @@ chmod +x start.sh
                     // Update stats
                     const activeDrones = this.boids.filter(b => !b.crashed).length;
                     const crashedDrones = this.boids.filter(b => b.crashed).length;
-                    document.getElementById('droneStat').textContent = activeDrones + ' / ' + this.boids.length;
+                    document.getElementById('droneStat').textContent = activeDrones;
                     document.getElementById('fpsValue').textContent = this.fps;
                     document.getElementById('timeValue').textContent = 
                         ((Date.now() - this.startTime) / 1000).toFixed(1) + 's';
-                    document.getElementById('avgDistValue').textContent = 
-                        (crashedDrones > 0 ? crashedDrones + ' Crashed' : this.getAverageDistance() + 'm');
+                    document.getElementById('avgDistValue').textContent = crashedDrones;
                 }
 
                 this.animationId = requestAnimationFrame(() => this.animate());
@@ -1475,7 +1532,7 @@ chmod +x start.sh
                 this.isRunning = false;
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 this.boids = [];
-                document.getElementById('startBtn').textContent = 'Start';
+                document.getElementById('startBtn').textContent = 'Launch Attack';
                 document.getElementById('startBtn').disabled = false;
                 document.getElementById('pauseBtn').disabled = true;
             }
@@ -1497,7 +1554,7 @@ chmod +x start.sh
         document.getElementById('startBtn').addEventListener('click', () => {
             let droneCount = parseInt(document.getElementById('droneCount').value);
             simulation.start(droneCount);
-            document.getElementById('startBtn').textContent = 'Running...';
+            document.getElementById('startBtn').textContent = 'Attack in Progress...';
             document.getElementById('startBtn').disabled = true;
             document.getElementById('pauseBtn').disabled = false;
         });
