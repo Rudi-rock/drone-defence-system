@@ -1128,8 +1128,8 @@ chmod +x start.sh
                 this.crashed = false;
                 this.crashX = 0;
                 this.crashY = 0;
-                this.deploymentRadius = 150; // Larger destruction radius
-                this.destructionRadius = 250; // Much larger destruction radius
+                this.deploymentRadius = 35; // Medium blast radius
+                this.destructionRadius = 60; // Main destruction radius
                 this.formationRadius = 80;
                 this.bangladeshBoundary = canvasWidth * 0.35; // Pakistan/India boundary
             }
@@ -1339,7 +1339,7 @@ chmod +x start.sh
                     // Explosion center
                     ctx.fillStyle = '#cc0000';
                     ctx.beginPath();
-                    ctx.arc(this.crashX, this.crashY, 8, 0, Math.PI * 2);
+                    ctx.arc(this.crashX, this.crashY, 4, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Damage indicator ring
