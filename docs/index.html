@@ -1552,27 +1552,46 @@ chmod +x start.sh
         }
 
         // Initialize simulation
-        let simulation = new SwarmSimulation('simulationCanvas');
+        let simulation = null;
+        
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                simulation = new SwarmSimulation('simulationCanvas');
+                console.log('Simulation initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize simulation:', error);
+            }
+        });
 
         // Modal controls
-        document.getElementById('simulationBtn').addEventListener('click', () => {
+        document.getElementById('simulationBtn')?.addEventListener('click', () => {
+            console.log('Simulation button clicked');
             document.getElementById('simulationModal').classList.add('active');
         });
 
-        document.getElementById('simulationClose').addEventListener('click', () => {
+        document.getElementById('simulationClose')?.addEventListener('click', () => {
+            console.log('Close button clicked');
             document.getElementById('simulationModal').classList.remove('active');
-            simulation.reset();
+            if (simulation) simulation.reset();
         });
 
-        document.getElementById('startBtn').addEventListener('click', () => {
+        document.getElementById('startBtn')?.addEventListener('click', () => {
+            console.log('Start button clicked');
+            if (!simulation) {
+                console.error('Simulation not initialized');
+                return;
+            }
             let droneCount = parseInt(document.getElementById('droneCount').value);
+            console.log('Starting simulation with', droneCount, 'drones');
             simulation.start(droneCount);
             document.getElementById('startBtn').textContent = 'Attack in Progress...';
             document.getElementById('startBtn').disabled = true;
             document.getElementById('pauseBtn').disabled = false;
         });
 
-        document.getElementById('pauseBtn').addEventListener('click', () => {
+        document.getElementById('pauseBtn')?.addEventListener('click', () => {
+            if (!simulation) return;
             if (simulation.isRunning) {
                 simulation.pause();
                 document.getElementById('pauseBtn').textContent = 'Resume';
@@ -1582,12 +1601,14 @@ chmod +x start.sh
             }
         });
 
-        document.getElementById('resetBtn').addEventListener('click', () => {
+        document.getElementById('resetBtn')?.addEventListener('click', () => {
+            if (!simulation) return;
             simulation.reset();
             document.getElementById('pauseBtn').textContent = 'Pause';
         });
 
-        document.getElementById('speedControl').addEventListener('input', (e) => {
+        document.getElementById('speedControl')?.addEventListener('input', (e) => {
+            if (!simulation) return;
             simulation.speedMultiplier = parseFloat(e.target.value);
         });
 
