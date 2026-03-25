@@ -1365,8 +1365,19 @@ chmod +x start.sh
         // Simulation manager
         class SwarmSimulation {
             constructor(canvasId) {
+                console.log('SwarmSimulation constructor called with canvasId:', canvasId);
                 this.canvas = document.getElementById(canvasId);
+                if (!this.canvas) {
+                    throw new Error(`Canvas element with id '${canvasId}' not found`);
+                }
+                console.log('Canvas found:', this.canvas);
+                
                 this.ctx = this.canvas.getContext('2d');
+                if (!this.ctx) {
+                    throw new Error('Failed to get 2D context from canvas');
+                }
+                console.log('Canvas context obtained:', this.ctx);
+                
                 this.boids = [];
                 this.isRunning = false;
                 this.speedMultiplier = 1.5;
@@ -1378,6 +1389,7 @@ chmod +x start.sh
                 this.backgroundImage = null;
                 this.imageLoaded = false;
                 this.loadBackgroundImage();
+                console.log('SwarmSimulation constructor completed');
             }
 
             loadBackgroundImage() {
@@ -1528,9 +1540,23 @@ chmod +x start.sh
             }
 
             start(droneCount) {
-                this.init(droneCount);
-                this.isRunning = true;
-                this.animate();
+                console.log('start() method called with droneCount:', droneCount);
+                try {
+                    this.init(droneCount);
+                    console.log('init() completed, boids count:', this.boids.length);
+                    this.isRunning = true;
+                    console.log('isRunning set to true');
+                    // Draw initial frame
+                    this.draw();
+                    console.log('Initial draw completed');
+                    // Start animation loop
+                    this.animate();
+                    console.log('animate() started');
+                } catch (error) {
+                    console.error('Error in start():', error);
+                    console.error('Error stack:', error.stack);
+                    this.isRunning = false;
+                }
             }
 
             pause() {
@@ -1554,15 +1580,31 @@ chmod +x start.sh
         // Initialize simulation
         let simulation = null;
         
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize immediately if DOM is already ready, otherwise wait
+        function initializeSimulation() {
             try {
+                console.log('Attempting to initialize SwarmSimulation...');
+                const canvas = document.getElementById('simulationCanvas');
+                console.log('Canvas element:', canvas);
+                if (!canvas) {
+                    console.error('Canvas element not found!');
+                    return;
+                }
                 simulation = new SwarmSimulation('simulationCanvas');
                 console.log('Simulation initialized successfully');
             } catch (error) {
                 console.error('Failed to initialize simulation:', error);
+                console.error('Error stack:', error.stack);
             }
-        });
+        }
+        
+        // Check if DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeSimulation);
+        } else {
+            // DOM is already ready
+            initializeSimulation();
+        }
 
         // Modal controls
         document.getElementById('simulationBtn')?.addEventListener('click', () => {
