@@ -1306,21 +1306,27 @@ chmod +x start.sh
                 if (this.imageLoaded && this.backgroundImage) {
                     // Draw the image scaled to fit the canvas
                     this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
-                    // Add a semi-transparent overlay for better drone visibility
-                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    // Very light overlay for drone visibility
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 } else {
-                    // Fallback gradient if image doesn't load
-                    let gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
-                    gradient.addColorStop(0, '#1a1a2e');
-                    gradient.addColorStop(1, '#16213e');
-                    this.ctx.fillStyle = gradient;
+                    // Fallback: light tan/beige for map-like appearance
+                    this.ctx.fillStyle = '#e8dcc8';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    
+                    // Draw landmass areas
+                    this.ctx.fillStyle = '#a8c76f';
+                    this.ctx.fillRect(0, 0, this.canvas.width * 0.4, this.canvas.height * 0.6);
+                    this.ctx.fillRect(this.canvas.width * 0.2, this.canvas.height * 0.3, this.canvas.width * 0.6, this.canvas.height * 0.4);
+                    
+                    // Draw water
+                    this.ctx.fillStyle = '#87ceeb';
+                    this.ctx.fillRect(this.canvas.width * 0.6, 0, this.canvas.width * 0.4, this.canvas.height * 0.5);
                 }
 
-                // Draw grid overlay
-                this.ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
-                this.ctx.lineWidth = 1;
+                // Draw grid overlay (very subtle)
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+                this.ctx.lineWidth = 0.5;
                 for (let i = 0; i < this.canvas.width; i += 50) {
                     this.ctx.beginPath();
                     this.ctx.moveTo(i, 0);
@@ -1336,7 +1342,7 @@ chmod +x start.sh
 
                 // Draw boids
                 for (let boid of this.boids) {
-                    boid.draw(this.ctx, '#667eea');
+                    boid.draw(this.ctx, '#ff6b6b');
                 }
 
                 // Draw swarm center
@@ -1348,9 +1354,9 @@ chmod +x start.sh
                 centerX /= this.boids.length;
                 centerY /= this.boids.length;
 
-                this.ctx.fillStyle = '#764ba2';
+                this.ctx.fillStyle = '#ff4757';
                 this.ctx.beginPath();
-                this.ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+                this.ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
                 this.ctx.fill();
             }
 
