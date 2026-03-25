@@ -1117,20 +1117,21 @@ chmod +x start.sh
             constructor(x, y, canvasWidth, canvasHeight) {
                 this.x = x;
                 this.y = y;
-                this.vx = (Math.random() - 0.5) * 4;
-                this.vy = (Math.random() - 0.5) * 4;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
                 this.canvasWidth = canvasWidth;
                 this.canvasHeight = canvasHeight;
-                this.maxSpeed = 6;
-                this.separationRadius = 40;
-                this.alignmentRadius = 120;
-                this.cohesionRadius = 120;
+                this.maxSpeed = 2.5; // Slower speed for realistic attack
+                this.separationRadius = 60;
+                this.alignmentRadius = 150;
+                this.cohesionRadius = 150;
                 this.crashed = false;
                 this.crashX = 0;
                 this.crashY = 0;
-                this.deploymentRadius = 80; // Initial destruction radius
-                this.destructionRadius = 120; // Max destruction radius
-                this.formationRadius = 60; // Formation flying distance
+                this.deploymentRadius = 150; // Larger destruction radius
+                this.destructionRadius = 250; // Much larger destruction radius
+                this.formationRadius = 80;
+                this.bangladeshBoundary = canvasWidth * 0.35; // Pakistan/India boundary
             }
 
             checkPakistan() {
@@ -1163,18 +1164,20 @@ chmod +x start.sh
                 }
 
                 // If we have formations, maintain formation
-                if (closestBoid && closestDist > 0 && closestDist < 150) {
+                if (closestBoid && closestDist > 0 && closestDist < 200) {
                     let dx = closestBoid.x - this.x;
                     let dy = closestBoid.y - this.y;
                     let dist = Math.sqrt(dx * dx + dy * dy);
                     
                     // Steer toward formation leader
-                    this.vx += (dx / dist) * 0.08;
-                    this.vy += (dy / dist) * 0.08;
+                    this.vx += (dx / dist) * 0.05;
+                    this.vy += (dy / dist) * 0.05;
                 }
 
-                // Strong direction toward Pakistan (left side)
-                this.vx -= 0.15 * speedMultiplier;
+                // Calculate distance to Pakistan and slow down based on distance
+                let distToPakistan = this.x - this.bangladeshBoundary;
+                let slowDownFactor = Math.min(1, distToPakistan / 400); // Gradual slowdown as distance increases
+                this.vx -= (0.08 * speedMultiplier * slowDownFactor);
             }
 
             // Separation: steer to avoid crowding
@@ -1189,8 +1192,8 @@ chmod +x start.sh
                     let distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (distance > 0 && distance < this.separationRadius) {
-                        steerX += (dx / distance) * 0.6;
-                        steerY += (dy / distance) * 0.6;
+                        steerX += (dx / distance) * 0.4;
+                        steerY += (dy / distance) * 0.4;
                         count++;
                     }
                 }
@@ -1198,6 +1201,9 @@ chmod +x start.sh
                 if (count > 0) {
                     steerX /= count;
                     steerY /= count;
+                }
+                return { x: steerX, y: steerY };
+            }
                 }
                 return { x: steerX, y: steerY };
             }
@@ -1226,7 +1232,7 @@ chmod +x start.sh
                     avgVx -= this.vx;
                     avgVy -= this.vy;
                 }
-                return { x: avgVx * 0.12, y: avgVy * 0.12 };
+                return { x: avgVx * 0.08, y: avgVy * 0.08 };
             }
 
             // Cohesion: stay together
@@ -1252,7 +1258,7 @@ chmod +x start.sh
                     avgY /= count;
                     let steerX = avgX - this.x;
                     let steerY = avgY - this.y;
-                    return { x: steerX * 0.08, y: steerY * 0.08 };
+                    return { x: steerX * 0.06, y: steerY * 0.06 };
                 }
                 return { x: 0, y: 0 };
             }
@@ -1290,7 +1296,7 @@ chmod +x start.sh
             }
 
             // Draw the drone
-            draw(ctx, color = '#ff6b6b') {
+            draw(ctx, color = '#ff1744') {
                 if (!this.crashed) {
                     ctx.save();
                     ctx.translate(this.x, this.y);
@@ -1298,52 +1304,59 @@ chmod +x start.sh
                     let angle = Math.atan2(this.vy, this.vx);
                     ctx.rotate(angle);
 
-                    // Drone body
+                    // Drone body (tiny)
                     ctx.fillStyle = color;
                     ctx.beginPath();
-                    ctx.moveTo(10, 0);
-                    ctx.lineTo(-5, -5);
-                    ctx.lineTo(-2, 0);
-                    ctx.lineTo(-5, 5);
+                    ctx.moveTo(6, 0);
+                    ctx.lineTo(-3, -2);
+                    ctx.lineTo(-1, 0);
+                    ctx.lineTo(-3, 2);
                     ctx.closePath();
                     ctx.fill();
 
-                    // Drone indicator
-                    ctx.fillStyle = '#ff0000';
+                    // Direction indicator
+                    ctx.fillStyle = '#ffffff';
                     ctx.beginPath();
-                    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                    ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
                     ctx.fill();
 
                     ctx.restore();
                 }
             }
 
-            // Draw destruction area when crashed
+            // Draw large destruction area when crashed
             drawDestruction(ctx) {
                 if (this.crashed) {
-                    // Large destruction radius (red transparent circle)
-                    ctx.fillStyle = 'rgba(255, 0, 0, 0.25)';
+                    // Large destruction radius (semi-transparent red)
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
                     ctx.beginPath();
                     ctx.arc(this.crashX, this.crashY, this.destructionRadius, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Medium destruction ring
-                    ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
+                    ctx.fillStyle = 'rgba(255, 80, 80, 0.25)';
                     ctx.beginPath();
                     ctx.arc(this.crashX, this.crashY, this.deploymentRadius, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Explosion center
-                    ctx.fillStyle = '#ff0000';
+                    ctx.fillStyle = '#cc0000';
                     ctx.beginPath();
-                    ctx.arc(this.crashX, this.crashY, 6, 0, Math.PI * 2);
+                    ctx.arc(this.crashX, this.crashY, 8, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Damage indicator ring
-                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.arc(this.crashX, this.crashY, this.destructionRadius - 10, 0, Math.PI * 2);
+                    ctx.arc(this.crashX, this.crashY, this.destructionRadius - 15, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Inner damage ring
+                    ctx.strokeStyle = 'rgba(255, 100, 100, 0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(this.crashX, this.crashY, this.deploymentRadius - 10, 0, Math.PI * 2);
                     ctx.stroke();
                 }
             }
