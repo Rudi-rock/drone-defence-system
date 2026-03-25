@@ -1125,6 +1125,21 @@ chmod +x start.sh
                 this.separationRadius = 40;
                 this.alignmentRadius = 80;
                 this.cohesionRadius = 80;
+                this.crashed = false;
+                this.crashX = 0;
+                this.crashY = 0;
+                this.coverageRadius = 50;
+            }
+
+            checkPakistan() {
+                // Pakistan region is roughly the left 30% of the map
+                if (this.x < this.canvasWidth * 0.3) {
+                    this.crashed = true;
+                    this.crashX = this.x;
+                    this.crashY = this.y;
+                    this.vx = 0;
+                    this.vy = 0;
+                }
             }
 
             // Separation: steer to avoid crowding local flockmates
@@ -1133,6 +1148,7 @@ chmod +x start.sh
                 let count = 0;
 
                 for (let boid of boids) {
+                    if (boid.crashed) continue;
                     let dx = this.x - boid.x;
                     let dy = this.y - boid.y;
                     let distance = Math.sqrt(dx * dx + dy * dy);
@@ -1157,6 +1173,7 @@ chmod +x start.sh
                 let count = 0;
 
                 for (let boid of boids) {
+                    if (boid.crashed) continue;
                     let dx = this.x - boid.x;
                     let dy = this.y - boid.y;
                     let distance = Math.sqrt(dx * dx + dy * dy);
@@ -1183,6 +1200,7 @@ chmod +x start.sh
                 let count = 0;
 
                 for (let boid of boids) {
+                    if (boid.crashed) continue;
                     let dx = this.x - boid.x;
                     let dy = this.y - boid.y;
                     let distance = Math.sqrt(dx * dx + dy * dy);
@@ -1206,6 +1224,8 @@ chmod +x start.sh
 
             // Update position based on boids rules
             update(boids, speedMultiplier) {
+                if (this.crashed) return;
+
                 let separation = this.separate(boids);
                 let alignment = this.align(boids);
                 let cohesion = this.cohere(boids);
@@ -1224,31 +1244,50 @@ chmod +x start.sh
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Wrap around edges
+                // Wrap around edges (allow movement to Pakistan)
                 if (this.x > this.canvasWidth) this.x = 0;
                 if (this.x < 0) this.x = this.canvasWidth;
                 if (this.y > this.canvasHeight) this.y = 0;
                 if (this.y < 0) this.y = this.canvasHeight;
+
+                // Check if drone enters Pakistan
+                this.checkPakistan();
             }
 
             // Draw the boid
-            draw(ctx, color = '#667eea') {
-                ctx.save();
-                ctx.translate(this.x, this.y);
+            draw(ctx, color = '#ff6b6b') {
+                if (!this.crashed) {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
 
-                let angle = Math.atan2(this.vy, this.vx);
-                ctx.rotate(angle);
+                    let angle = Math.atan2(this.vy, this.vx);
+                    ctx.rotate(angle);
 
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.moveTo(8, 0);
-                ctx.lineTo(-4, -4);
-                ctx.lineTo(-2, 0);
-                ctx.lineTo(-4, 4);
-                ctx.closePath();
-                ctx.fill();
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(8, 0);
+                    ctx.lineTo(-4, -4);
+                    ctx.lineTo(-2, 0);
+                    ctx.lineTo(-4, 4);
+                    ctx.closePath();
+                    ctx.fill();
 
-                ctx.restore();
+                    ctx.restore();
+                }
+            }
+
+            drawCoverage(ctx) {
+                if (this.crashed) {
+                    ctx.fillStyle = 'rgba(255, 107, 107, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(this.crashX, this.crashY, this.coverageRadius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(this.crashX, this.crashY, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
 
@@ -1344,19 +1383,29 @@ chmod +x start.sh
                     boid.draw(this.ctx, '#ff6b6b');
                 }
 
+                // Draw coverage areas for crashed drones
+                for (let boid of this.boids) {
+                    boid.drawCoverage(this.ctx);
+                }
+
                 // Draw swarm center
                 let centerX = 0, centerY = 0;
                 for (let boid of this.boids) {
-                    centerX += boid.x;
-                    centerY += boid.y;
+                    if (!boid.crashed) {
+                        centerX += boid.x;
+                        centerY += boid.y;
+                    }
                 }
-                centerX /= this.boids.length;
-                centerY /= this.boids.length;
+                const activeBoids = this.boids.filter(b => !b.crashed).length;
+                if (activeBoids > 0) {
+                    centerX /= activeBoids;
+                    centerY /= activeBoids;
 
-                this.ctx.fillStyle = '#ff4757';
-                this.ctx.beginPath();
-                this.ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
-                this.ctx.fill();
+                    this.ctx.fillStyle = '#ff4757';
+                    this.ctx.beginPath();
+                    this.ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
             }
 
             getAverageDistance() {
@@ -1395,12 +1444,14 @@ chmod +x start.sh
                     }
 
                     // Update stats
-                    document.getElementById('droneStat').textContent = this.boids.length;
+                    const activeDrones = this.boids.filter(b => !b.crashed).length;
+                    const crashedDrones = this.boids.filter(b => b.crashed).length;
+                    document.getElementById('droneStat').textContent = activeDrones + ' / ' + this.boids.length;
                     document.getElementById('fpsValue').textContent = this.fps;
                     document.getElementById('timeValue').textContent = 
                         ((Date.now() - this.startTime) / 1000).toFixed(1) + 's';
                     document.getElementById('avgDistValue').textContent = 
-                        this.getAverageDistance() + 'm';
+                        (crashedDrones > 0 ? crashedDrones + ' Crashed' : this.getAverageDistance() + 'm');
                 }
 
                 this.animationId = requestAnimationFrame(() => this.animate());
