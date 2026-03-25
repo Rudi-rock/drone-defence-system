@@ -489,6 +489,216 @@
         .link-card-icon {
             font-size: 2.5rem;
         }
+
+        /* Simulation Button */
+        #simulationBtn {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            z-index: 999;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+        }
+
+        #simulationBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        #simulationBtn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Modal */
+        #simulationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        #simulationModal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #667eea;
+            font-size: 2rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        #simulationCanvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            background: #1a1a1a;
+            display: block;
+            margin: 1.5rem 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .sim-controls label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .sim-controls input, .sim-controls select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .sim-controls input:focus, .sim-controls select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .sim-controls button {
+            padding: 0.7rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sim-controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .sim-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .stat-name {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            #simulationBtn {
+                position: relative;
+                display: block;
+                width: auto;
+                margin: 1rem 0;
+                top: auto;
+                right: auto;
+            }
+
+            .modal-content {
+                padding: 1rem;
+                width: 95%;
+            }
+
+            #simulationCanvas {
+                width: 100%;
+                height: auto;
+            }
+
+            .sim-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .sim-controls input, .sim-controls select, .sim-controls button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -504,6 +714,52 @@
             </ul>
         </div>
     </nav>
+
+    <!-- Simulation Button -->
+    <button id="simulationBtn">▶ Run Simulation</button>
+
+    <!-- Simulation Modal -->
+    <div id="simulationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚁 Live Drone Swarm Simulation</h2>
+                <button class="modal-close" id="simulationClose">&times;</button>
+            </div>
+            
+            <div class="sim-controls">
+                <label>Drones:</label>
+                <input type="number" id="droneCount" min="5" max="100" value="30" style="width: 80px;">
+                
+                <label>Speed:</label>
+                <input type="range" id="speedControl" min="0.5" max="3" step="0.5" value="1.5" style="width: 100px;">
+                
+                <button id="startBtn">Start</button>
+                <button id="pauseBtn" disabled>Pause</button>
+                <button id="resetBtn">Reset</button>
+            </div>
+
+            <canvas id="simulationCanvas" width="800" height="500"></canvas>
+
+            <div class="sim-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="droneStat">30</div>
+                    <div class="stat-name">Drones</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="fpsValue">60</div>
+                    <div class="stat-name">FPS</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="timeValue">0s</div>
+                    <div class="stat-name">Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgDistValue">0m</div>
+                    <div class="stat-name">Avg Distance</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <div class="hero">
@@ -854,6 +1110,333 @@ chmod +x start.sh
     </footer>
 
     <script>
+        // ============ BOIDS ALGORITHM SIMULATION ============
+        class Boid {
+            constructor(x, y, canvasWidth, canvasHeight) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.canvasWidth = canvasWidth;
+                this.canvasHeight = canvasHeight;
+                this.maxSpeed = 5;
+                this.separationRadius = 40;
+                this.alignmentRadius = 80;
+                this.cohesionRadius = 80;
+            }
+
+            // Separation: steer to avoid crowding local flockmates
+            separate(boids) {
+                let steerX = 0, steerY = 0;
+                let count = 0;
+
+                for (let boid of boids) {
+                    let dx = this.x - boid.x;
+                    let dy = this.y - boid.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance > 0 && distance < this.separationRadius) {
+                        steerX += (dx / distance) * 0.5;
+                        steerY += (dy / distance) * 0.5;
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    steerX /= count;
+                    steerY /= count;
+                }
+                return { x: steerX, y: steerY };
+            }
+
+            // Alignment: steer towards the average heading of local flockmates
+            align(boids) {
+                let avgVx = 0, avgVy = 0;
+                let count = 0;
+
+                for (let boid of boids) {
+                    let dx = this.x - boid.x;
+                    let dy = this.y - boid.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance > 0 && distance < this.alignmentRadius) {
+                        avgVx += boid.vx;
+                        avgVy += boid.vy;
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    avgVx /= count;
+                    avgVy /= count;
+                    avgVx -= this.vx;
+                    avgVy -= this.vy;
+                }
+                return { x: avgVx * 0.1, y: avgVy * 0.1 };
+            }
+
+            // Cohesion: steer to move toward the average location of local flockmates
+            cohere(boids) {
+                let avgX = 0, avgY = 0;
+                let count = 0;
+
+                for (let boid of boids) {
+                    let dx = this.x - boid.x;
+                    let dy = this.y - boid.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance > 0 && distance < this.cohesionRadius) {
+                        avgX += boid.x;
+                        avgY += boid.y;
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    avgX /= count;
+                    avgY /= count;
+                    let steerX = avgX - this.x;
+                    let steerY = avgY - this.y;
+                    return { x: steerX * 0.1, y: steerY * 0.1 };
+                }
+                return { x: 0, y: 0 };
+            }
+
+            // Update position based on boids rules
+            update(boids, speedMultiplier) {
+                let separation = this.separate(boids);
+                let alignment = this.align(boids);
+                let cohesion = this.cohere(boids);
+
+                this.vx += separation.x + alignment.x + cohesion.x;
+                this.vy += separation.y + alignment.y + cohesion.y;
+
+                // Limit speed
+                let speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed > this.maxSpeed * speedMultiplier) {
+                    this.vx = (this.vx / speed) * this.maxSpeed * speedMultiplier;
+                    this.vy = (this.vy / speed) * this.maxSpeed * speedMultiplier;
+                }
+
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Wrap around edges
+                if (this.x > this.canvasWidth) this.x = 0;
+                if (this.x < 0) this.x = this.canvasWidth;
+                if (this.y > this.canvasHeight) this.y = 0;
+                if (this.y < 0) this.y = this.canvasHeight;
+            }
+
+            // Draw the boid
+            draw(ctx, color = '#667eea') {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                let angle = Math.atan2(this.vy, this.vx);
+                ctx.rotate(angle);
+
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(8, 0);
+                ctx.lineTo(-4, -4);
+                ctx.lineTo(-2, 0);
+                ctx.lineTo(-4, 4);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // Simulation manager
+        class SwarmSimulation {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.boids = [];
+                this.isRunning = false;
+                this.speedMultiplier = 1.5;
+                this.startTime = 0;
+                this.frameCount = 0;
+                this.lastFpsTime = 0;
+                this.fps = 60;
+                this.animationId = null;
+            }
+
+            init(droneCount) {
+                this.boids = [];
+                for (let i = 0; i < droneCount; i++) {
+                    let x = Math.random() * this.canvas.width;
+                    let y = Math.random() * this.canvas.height;
+                    this.boids.push(new Boid(x, y, this.canvas.width, this.canvas.height));
+                }
+                this.startTime = Date.now();
+                this.frameCount = 0;
+            }
+
+            update() {
+                for (let boid of this.boids) {
+                    boid.update(this.boids, this.speedMultiplier);
+                }
+            }
+
+            draw() {
+                // Clear canvas with gradient
+                let gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
+                gradient.addColorStop(0, '#1a1a2e');
+                gradient.addColorStop(1, '#16213e');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw grid
+                this.ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
+                this.ctx.lineWidth = 1;
+                for (let i = 0; i < this.canvas.width; i += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(i, 0);
+                    this.ctx.lineTo(i, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                for (let i = 0; i < this.canvas.height; i += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, i);
+                    this.ctx.lineTo(this.canvas.width, i);
+                    this.ctx.stroke();
+                }
+
+                // Draw boids
+                for (let boid of this.boids) {
+                    boid.draw(this.ctx, '#667eea');
+                }
+
+                // Draw swarm center
+                let centerX = 0, centerY = 0;
+                for (let boid of this.boids) {
+                    centerX += boid.x;
+                    centerY += boid.y;
+                }
+                centerX /= this.boids.length;
+                centerY /= this.boids.length;
+
+                this.ctx.fillStyle = '#764ba2';
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+
+            getAverageDistance() {
+                let totalDistance = 0;
+                let count = 0;
+                let centerX = 0, centerY = 0;
+
+                for (let boid of this.boids) {
+                    centerX += boid.x;
+                    centerY += boid.y;
+                }
+                centerX /= this.boids.length;
+                centerY /= this.boids.length;
+
+                for (let boid of this.boids) {
+                    let dx = boid.x - centerX;
+                    let dy = boid.y - centerY;
+                    totalDistance += Math.sqrt(dx * dx + dy * dy);
+                }
+
+                return (totalDistance / this.boids.length).toFixed(1);
+            }
+
+            animate() {
+                if (this.isRunning) {
+                    this.update();
+                    this.draw();
+                    this.frameCount++;
+
+                    // Update FPS
+                    let now = Date.now();
+                    if (now - this.lastFpsTime > 1000) {
+                        this.fps = this.frameCount;
+                        this.frameCount = 0;
+                        this.lastFpsTime = now;
+                    }
+
+                    // Update stats
+                    document.getElementById('droneStat').textContent = this.boids.length;
+                    document.getElementById('fpsValue').textContent = this.fps;
+                    document.getElementById('timeValue').textContent = 
+                        ((Date.now() - this.startTime) / 1000).toFixed(1) + 's';
+                    document.getElementById('avgDistValue').textContent = 
+                        this.getAverageDistance() + 'm';
+                }
+
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+
+            start(droneCount) {
+                this.init(droneCount);
+                this.isRunning = true;
+                this.animate();
+            }
+
+            pause() {
+                this.isRunning = false;
+            }
+
+            resume() {
+                this.isRunning = true;
+            }
+
+            reset() {
+                this.isRunning = false;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.boids = [];
+                document.getElementById('startBtn').textContent = 'Start';
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('pauseBtn').disabled = true;
+            }
+        }
+
+        // Initialize simulation
+        let simulation = new SwarmSimulation('simulationCanvas');
+
+        // Modal controls
+        document.getElementById('simulationBtn').addEventListener('click', () => {
+            document.getElementById('simulationModal').classList.add('active');
+        });
+
+        document.getElementById('simulationClose').addEventListener('click', () => {
+            document.getElementById('simulationModal').classList.remove('active');
+            simulation.reset();
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            let droneCount = parseInt(document.getElementById('droneCount').value);
+            simulation.start(droneCount);
+            document.getElementById('startBtn').textContent = 'Running...';
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (simulation.isRunning) {
+                simulation.pause();
+                document.getElementById('pauseBtn').textContent = 'Resume';
+            } else {
+                simulation.resume();
+                document.getElementById('pauseBtn').textContent = 'Pause';
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            simulation.reset();
+            document.getElementById('pauseBtn').textContent = 'Pause';
+        });
+
+        document.getElementById('speedControl').addEventListener('input', (e) => {
+            simulation.speedMultiplier = parseFloat(e.target.value);
+        });
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
