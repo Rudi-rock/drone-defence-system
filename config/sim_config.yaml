@@ -1,0 +1,52 @@
+# === Simulation / Digital Twin Configuration ===
+
+world:
+  bounds:
+    x: [-200, 200]              # meters
+    y: [-200, 200]
+    z: [0, 100]
+  patrol_zone:
+    x: [-150, 150]
+    y: [-150, 150]
+  obstacles:
+    - type: building
+      position: [30, 40]
+      size: [20, 15]
+      height: 25
+    - type: building
+      position: [-50, -20]
+      size: [10, 30]
+      height: 40
+
+physics:
+  dt: 0.05                     # simulation timestep (seconds)
+  gravity: 9.81
+  drag_coefficient: 0.1
+  battery_drain_rate: 0.02     # % per second at cruise
+
+visualization:
+  window_size: [1200, 800]
+  fps: 60
+  show_trails: true
+  trail_length: 50
+  show_sensor_range: true
+  show_mesh_links: true
+  colors:
+    scout: [0, 200, 255]       # cyan
+    guard: [255, 80, 80]       # red
+    relay: [80, 255, 80]       # green
+    threat: [255, 200, 0]      # amber
+    obstacle: [100, 100, 100]  # gray
+
+scenarios:
+  basic_patrol:
+    duration: 120
+    threat_count: 0
+  intrusion_response:
+    duration: 180
+    threat_count: 2
+    threat_speed: 3.0
+  stress_test:
+    duration: 300
+    node_loss_pct: 0.3
+    comm_jam_probability: 0.1

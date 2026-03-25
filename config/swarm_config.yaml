@@ -1,0 +1,37 @@
+# === Swarm Intelligence Configuration ===
+
+fleet:
+  size: 5
+  default_role: SCOUT          # SCOUT | GUARD | RELAY
+  spawn_area:
+    x_range: [-50, 50]
+    y_range: [-50, 50]
+    z_range: [10, 30]           # altitude in meters
+
+boids:
+  separation:
+    weight: 1.5
+    radius: 8.0                 # meters — min distance between drones
+  alignment:
+    weight: 1.0
+    radius: 25.0                # meters — neighborhood for velocity sync
+  cohesion:
+    weight: 1.0
+    radius: 25.0                # meters — neighborhood for centering
+  max_speed: 15.0               # m/s
+  max_force: 5.0                # m/s² — steering force cap
+
+roles:
+  scout:
+    patrol_speed: 10.0
+    sensor_range: 50.0
+  guard:
+    hold_distance: 15.0
+    engagement_range: 30.0
+  relay:
+    preferred_altitude: 40.0
+    link_margin_db: 6.0
+
+collision:
+  hard_radius: 3.0              # meters — absolute minimum separation
+  avoidance_weight: 3.0         # override boids when inside hard radius

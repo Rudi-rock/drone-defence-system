@@ -1,0 +1,32 @@
+# === Perception Layer Configuration ===
+
+detector:
+  model: yolov8n                # nano model for edge deployment
+  confidence_threshold: 0.45
+  nms_threshold: 0.5
+  input_size: [640, 640]
+  device: cpu                   # cpu | cuda | mps
+
+tracker:
+  algorithm: deepsort
+  max_age: 30                   # frames before track is dropped
+  min_hits: 3                   # detections before track is confirmed
+
+sensor_fusion:
+  camera_weight: 0.6
+  lidar_weight: 0.3
+  thermal_weight: 0.1
+
+threat_levels:
+  LOW:
+    min_confidence: 0.45
+    classes: [animal, bird]
+  MEDIUM:
+    min_confidence: 0.55
+    classes: [person]
+  HIGH:
+    min_confidence: 0.65
+    classes: [vehicle, group]
+  CRITICAL:
+    min_confidence: 0.75
+    classes: [armed_person, hostile_vehicle]
