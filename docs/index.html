@@ -1265,6 +1265,23 @@ chmod +x start.sh
                 this.lastFpsTime = 0;
                 this.fps = 60;
                 this.animationId = null;
+                this.backgroundImage = null;
+                this.imageLoaded = false;
+                this.loadBackgroundImage();
+            }
+
+            loadBackgroundImage() {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => {
+                    this.backgroundImage = img;
+                    this.imageLoaded = true;
+                };
+                img.onerror = () => {
+                    console.log('Background image failed to load, using default gradient');
+                    this.imageLoaded = false;
+                };
+                img.src = 'https://mondediplo.com/local/cache-vignettes/L640xH482/arton2026-cbd6f-de10b.jpg?1583768946';
             }
 
             init(droneCount) {
@@ -1285,14 +1302,23 @@ chmod +x start.sh
             }
 
             draw() {
-                // Clear canvas with gradient
-                let gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
-                gradient.addColorStop(0, '#1a1a2e');
-                gradient.addColorStop(1, '#16213e');
-                this.ctx.fillStyle = gradient;
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                // Draw background
+                if (this.imageLoaded && this.backgroundImage) {
+                    // Draw the image scaled to fit the canvas
+                    this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+                    // Add a semi-transparent overlay for better drone visibility
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                } else {
+                    // Fallback gradient if image doesn't load
+                    let gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
+                    gradient.addColorStop(0, '#1a1a2e');
+                    gradient.addColorStop(1, '#16213e');
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                }
 
-                // Draw grid
+                // Draw grid overlay
                 this.ctx.strokeStyle = 'rgba(102, 126, 234, 0.1)';
                 this.ctx.lineWidth = 1;
                 for (let i = 0; i < this.canvas.width; i += 50) {
